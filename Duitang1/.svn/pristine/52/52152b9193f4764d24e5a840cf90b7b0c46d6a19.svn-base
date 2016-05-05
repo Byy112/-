@@ -1,0 +1,306 @@
+//
+//  SETViewController.m
+//  MINE
+//
+//  Created by lanouhn on 15/6/23.
+//  Copyright (c) 2015年 李加奇. All rights reserved.
+//
+
+#import "SETViewController.h"
+
+#import "AboutViewController.h"
+
+#import "APPStrodeViewController.h"
+
+#import "SDWebImageManager.h"
+
+#import "SDImageCache.h"
+#define NavigationBarHight 64.0f
+#define ImageHeight 270
+@interface SETViewController ()<UIAlertViewDelegate>
+@property (nonatomic, retain)UITableView *tableView;
+@property (nonatomic, retain)UIImageView *zoomImageView;//变焦图片做底层
+@property (nonatomic, retain)NSArray *nameArray;
+@property (nonatomic, retain)UIProgressView *progress;
+@property (nonatomic, assign)NSInteger *number;
+@property (nonatomic, assign) double provalue;
+@property (nonatomic, retain)NSTimer *timer;
+@end
+
+@implementation SETViewController
+
+- (void)dealloc {
+    self.tableView = nil;
+    self.nameArray = nil;
+    self.zoomImageView = nil;
+    self.progress = nil;
+    [super dealloc];
+}
+
+- (UIProgressView *)progress {
+    if (_progress == nil) {
+        self.progress = [[UIProgressView alloc]initWithProgressViewStyle:UIProgressViewStyleDefault];
+        self.progress.progress = 0;
+        //设置进度条默认值
+        self.progress.trackTintColor = [UIColor cyanColor];
+        //设置颜色
+        self.progress.progressTintColor = [UIColor redColor];
+        self.progress.hidden = YES;
+    }
+    return _progress;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.navigationItem.title = @"设置";
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]initWithBarButtonSystemItem:(UIBarButtonSystemItemCancel) target:self action:@selector(cancel:)];
+    self.tableView = [[UITableView alloc]initWithFrame:self.view.bounds style:(UITableViewStylePlain)];
+    
+    self.tableView.delegate = self;
+    self.tableView.dataSource = self;
+    
+    self.tableView.contentInset = UIEdgeInsetsMake(ImageHeight, 0, 0, 0);
+    
+    [self.view addSubview:self.tableView];
+    self.view = self.tableView;
+    
+    self.tableView.tableFooterView = [UIView new];
+    
+    self.zoomImageView = [[UIImageView alloc]initWithImage:[UIImage imageNamed:@"bg.jpg"]];
+    self.zoomImageView.frame = CGRectMake(0, -ImageHeight, self.view.frame.size.width, ImageHeight);
+    self.zoomImageView.contentMode = UIViewContentModeScaleAspectFill; //(不设置那将只会被纵向拉伸)
+    
+    [self.tableView addSubview:self.zoomImageView];
+    self.zoomImageView.autoresizesSubviews = YES; //让子类自动布局
+
+    
+    self.nameArray = @[@"清除图片缓存",@"关于我们",@"检查更新",@"去帮我们评五星"];
+    
+}
+
+
+- (void)cancel:(UIBarButtonItem *)item {
+//    [self dismissViewControllerAnimated:YES completion:^{
+//        
+//    }];
+    [self.navigationController popToRootViewControllerAnimated:YES];
+}
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    CGFloat y = scrollView.contentOffset.y + NavigationBarHight;
+    if (y < -ImageHeight) {
+        CGRect frame = self.zoomImageView.frame;
+        frame.origin.y = y;
+        frame.size.height = -y;
+        self.zoomImageView.frame = frame;
+    }
+}
+
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return 4;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    static NSString *identifier = @"cell";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
+    if (!cell) {
+        cell = [[UITableViewCell alloc]initWithStyle:(UITableViewCellStyleDefault) reuseIdentifier:identifier];
+        cell.textLabel.text = self.nameArray[indexPath.row];
+         //NSLog(@"%ld",indexPath.section);
+    }
+    if (indexPath.row == 0) {
+        cell.accessoryView = self.progress;
+    }
+    if (indexPath.row == 1 || indexPath.row == 2) {
+        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+    }
+        return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    switch (indexPath.row) {
+        case 0:
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [self cleanAction];
+            });
+            break;
+        case 1:{
+            AboutViewController *about = [[AboutViewController alloc]init];
+            [self.navigationController pushViewController:about animated:YES];
+        }
+            
+            break;
+        case 2:
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [self updateAction];
+            });
+            break;
+            
+        case 3:
+        {
+//            APPStrodeViewController *app = [[APPStrodeViewController alloc]init];
+//            [self.navigationController pushViewController:app animated:YES];
+        }
+            
+            break;
+        default:
+            break;
+    }
+
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section {
+    return 2;
+}
+- (void)cleanAction {
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示" message:@"是否清除" delegate:nil cancelButtonTitle:@"取消" otherButtonTitles:@"确认", nil];
+    alert.delegate = self;
+    alert.tag = 111;
+    [alert show];
+    [alert release];
+}
+
+//获取缓存路径
+- (NSString *)getCache{
+    NSString *cachePath = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) firstObject];
+    return cachePath;
+}
+- (NSString *)getDoc{
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    
+    NSString *docPath = paths.lastObject;
+    
+    return docPath;
+}
+//获取文件夹大小
+- (CGFloat)folderSizeAtPath{
+    //创建文件管理器
+    NSFileManager *manager = [NSFileManager defaultManager];
+    //获取文件夹路径
+    NSString *folderPath = [self getCache];
+    NSString *docPath = [self getDoc];
+    //如果缓存文件不存在，就返回0
+    if (![manager fileExistsAtPath:folderPath] && ![manager fileExistsAtPath:docPath]) {
+        return 0;
+    }
+    
+    NSString *fileName = nil;//定义一个空的文件名，用来获取枚举器中的文件名
+    long long folderSize = 0;//定义并初始化文件大小为0
+    
+    if ([manager fileExistsAtPath:folderPath]) {
+        //如果缓存文件存在就计算缓存文件的大小
+        NSEnumerator *childFilesEnumerator = [[manager subpathsAtPath:folderPath] objectEnumerator];//从缓存路径中的文件数组得到枚举器
+        
+        while ((fileName = [childFilesEnumerator nextObject]) != nil) {
+            //得到单个文件的绝对路径
+            NSString *fileAbsolutePath = [folderPath stringByAppendingPathComponent:fileName];
+            //定义单个文件变量并初始化为0
+            float singleFileSize = 0.0;
+            //如果该单个文件存在，获取单个文件的大小
+            if ([manager fileExistsAtPath:fileAbsolutePath]) {
+                //attributesOfItemAtPath:获取文件的属性
+                singleFileSize = [[manager attributesOfItemAtPath:fileAbsolutePath error:nil] fileSize];
+            }
+            folderSize += singleFileSize;
+        }
+        
+    }
+    
+    if ([manager fileExistsAtPath:docPath]) {
+        //如果缓存文件存在就计算缓存文件的大小
+        NSEnumerator *childFilesEnumerator = [[manager subpathsAtPath:docPath] objectEnumerator];//从缓存路径中的文件数组得到枚举器
+        
+        while ((fileName = [childFilesEnumerator nextObject]) != nil) {
+            //得到单个文件的绝对路径
+            NSString *fileAbsolutePath = [docPath stringByAppendingPathComponent:fileName];
+            //定义单个文件变量并初始化为0
+            float singleFileSize = 0.0;
+            //如果该单个文件存在，获取单个文件的大小
+            if ([manager fileExistsAtPath:fileAbsolutePath]) {
+                //attributesOfItemAtPath:获取文件的属性
+                singleFileSize = [[manager attributesOfItemAtPath:fileAbsolutePath error:nil] fileSize];
+            }
+            folderSize += singleFileSize;
+        }
+        
+    }
+    return folderSize;
+}
+//清除缓存
+- (void)clearCache{
+    NSFileManager *manager = [NSFileManager defaultManager];
+    NSString *floderPath = [self getCache];
+    NSString *docPath = [self getDoc];
+    if ([manager fileExistsAtPath:floderPath]) {
+        NSArray *childFiles = [manager subpathsAtPath:floderPath];
+        for (NSString *fileName in childFiles) {
+            NSString *absolutePath = [floderPath stringByAppendingPathComponent:fileName];
+            [manager removeItemAtPath:absolutePath error:nil];
+        }
+    }
+    if ([manager fileExistsAtPath:docPath]) {
+        NSArray *childFiles = [manager subpathsAtPath:docPath];
+        for (NSString *fileName in childFiles) {
+            NSString *absolutePath = [docPath stringByAppendingPathComponent:fileName];
+            [manager removeItemAtPath:absolutePath error:nil];
+        }
+    }
+    
+    [[SDImageCache sharedImageCache] cleanDisk];
+}
+
+- (void)updateAction {
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示" message:@"当前已是最新版本1.0" delegate:nil cancelButtonTitle:nil otherButtonTitles:@"确认", nil];
+    alert.tag = 222;
+    alert.delegate = self;
+    [alert show];
+    [alert release];
+}
+
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+    if (alertView.tag == 111 && buttonIndex == 1) {
+        self.progress.hidden = NO;
+        [self clearCache];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            self.provalue = 0;
+            self.timer = [NSTimer scheduledTimerWithTimeInterval:0.01 target:self selector:@selector(changeProgress) userInfo:nil repeats:YES];
+            });
+        [self.tableView reloadData];
+    }
+}
+
+- (void)changeProgress {
+    //改变 provalue 的值
+    self.provalue += 0.004;
+    if (self.provalue > 1.0) {
+        //停止计时器
+        [self.timer invalidate];
+        [self.progress setProgress:0];
+        
+        self.progress.hidden = YES;
+
+    }else {
+        //重置计时器
+        [self.progress setProgress:self.provalue];
+    }
+}
+
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

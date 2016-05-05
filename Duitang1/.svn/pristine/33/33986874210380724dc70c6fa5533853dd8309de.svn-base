@@ -1,0 +1,22 @@
+//
+//  ScrollView.h
+//  Duitang
+//
+//  Created by lanouhn on 15/6/18.
+//  Copyright (c) 2015年 lanouhn. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+@class HotModel;
+@interface ScrollView : UIView<UIScrollViewDelegate>
+@property (nonatomic, retain)UIScrollView * scrollView;
+//存放图片
+@property (nonatomic, retain)NSMutableArray * imageArray;
+//存放图片的标题
+@property (nonatomic, retain)NSMutableArray * titleArray;
+
+@property (nonatomic, retain)UIImageView * imageView;
+@property (nonatomic, retain)UILabel * label;
+
+- (void)configureSrollWithHotModel:(HotModel *)model;
+@end

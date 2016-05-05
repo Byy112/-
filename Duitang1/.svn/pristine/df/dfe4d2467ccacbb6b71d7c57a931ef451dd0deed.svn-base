@@ -1,0 +1,121 @@
+//
+//  CommentCell.m
+//  shiyan
+//
+//  Created by lanouhn on 15/6/20.
+//  Copyright (c) 2015年 lanouhn. All rights reserved.
+//
+
+#import "CommentCell.h"
+#import "UIImageView+WebCache.h"
+#import "CommentObjectList.h"
+#import "Sender.h"
+@interface CommentCell ()
+@property (nonatomic)CGRect rect;
+@property (nonatomic)CGRect contentRect;
+@end
+
+@implementation CommentCell   //评论cell
+
+- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
+    
+    self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
+    if (self) {
+        //添加子控件
+        [self.contentView addSubview:self.add_datetime_strLabel];
+        [self.contentView addSubview:self.contentLabel];
+        [self.contentView addSubview:self.sender_avatar];
+        [self.contentView addSubview:self.sender_username];
+        
+    }
+    return self;
+}
+
+- (UIImageView *)sender_avatar {
+
+    if (!_sender_avatar) {
+        self.sender_avatar = [[UIImageView alloc]initWithFrame:CGRectMake(10, 10, 40, 40)];
+        self.sender_avatar.layer.cornerRadius = 20;
+        self.sender_avatar.clipsToBounds = YES;
+//        self.sender_avatar.backgroundColor = [UIColor brownColor];
+    }
+    return [[_sender_avatar retain] autorelease];
+}
+- (UILabel *)sender_username {
+
+    if (!_sender_username) {
+        self.sender_username = [[UILabel alloc]initWithFrame:CGRectMake(60, 12, self.frame.size.width - self.rect.size.width - 60 - 100, 20)];
+        self.sender_username.font = [UIFont systemFontOfSize:15];
+        self.sender_username.textColor = [UIColor blueColor];
+        self.sender_username.lineBreakMode = NSLineBreakByWordWrapping;
+//        self.sender_username.backgroundColor = [UIColor cyanColor];
+        
+    }
+    return [[_sender_username retain] autorelease];
+}
+- (UILabel *)add_datetime_strLabel {
+
+    if (!_add_datetime_strLabel) {
+
+//        self.add_datetime_strLabel = [[UILabel alloc]initWithFrame:CGRectMake(self.frame.size.width - self.rect.size.width - 10 , 10, self.rect.size.width, 20)];
+        self.add_datetime_strLabel = [[UILabel alloc]initWithFrame:CGRectMake(230 , 10, 100, 20)];
+        self.add_datetime_strLabel.textColor = [UIColor lightGrayColor];
+        self.add_datetime_strLabel.font = [UIFont systemFontOfSize:13];
+//        self.add_datetime_strLabel.backgroundColor = [UIColor yellowColor];
+    }
+    return [[_add_datetime_strLabel retain] autorelease];
+}
+- (UILabel *)contentLabel {
+
+    if (!_contentLabel) {
+        self.contentLabel = [[UILabel alloc]initWithFrame:CGRectMake(70, 37, self.contentRect.size.width - 10, self.contentRect.size.height)];
+        self.contentLabel.font = [UIFont systemFontOfSize:15];
+        self.contentLabel.numberOfLines = 0;
+//        self.contentLabel.backgroundColor = [UIColor greenColor];
+    }
+    return [[_contentLabel retain] autorelease];
+}
+
+- (void)setCommentModel:(CommentObjectList *)model {
+
+    if (_commentModel != model) {
+        [_commentModel release];
+        _commentModel = [model retain];
+    }
+    self.sender_username.text = _commentModel.sender.username;
+    [self.sender_avatar sd_setImageWithURL:[NSURL URLWithString:_commentModel.sender.avatar] placeholderImage:[UIImage imageNamed:@"2.png"]];
+
+    self.add_datetime_strLabel.text = _commentModel.add_datetime_str;
+    self.rect = [_commentModel.add_datetime_str boundingRectWithSize:CGSizeMake(300, 100) options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:13]} context:nil];
+    CGRect fram = self.add_datetime_strLabel.frame;
+    fram.size.width = self.rect.size.width;
+    self.add_datetime_strLabel.frame = fram;
+//    NSLog(@"#####%f",self.rect.size.width);
+
+    self.contentLabel.text = _commentModel.content;
+    self.contentRect = [_commentModel.content boundingRectWithSize:CGSizeMake(300, 100) options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:15]} context:nil];
+      CGRect contentFram = self.contentLabel.frame;
+      contentFram.size = self.contentRect.size;
+      self.contentLabel.frame = contentFram;
+    
+}
+
+
+- (void)awakeFromNib {
+    // Initialization code
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+- (void)dealloc {
+
+    self.contentLabel = nil;
+    self.sender_avatar = nil;
+    self.sender_username = nil;
+    self.add_datetime_strLabel = nil;
+    [super dealloc];
+}
+@end

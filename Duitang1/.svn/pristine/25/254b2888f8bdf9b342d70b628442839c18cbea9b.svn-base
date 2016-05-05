@@ -1,0 +1,37 @@
+//
+//  NetWorkRequest.h
+//  NetWorkRequest
+//
+//  Created by lanouhn on 15/6/18.
+//  Copyright (c) 2015年 lanouhn. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+//定义一个协议
+@protocol NetWorkRequestDelegate <NSObject>
+
+@optional
+//请求成功
+- (void)getDataSuccessWithObject:(id)object;
+//请求失败
+- (void)getDataFail;
+
+@end
+
+
+@interface NetWorkRequest : NSObject<NSURLConnectionDataDelegate,NSURLConnectionDelegate>
+
+@property (nonatomic, assign)id<NetWorkRequestDelegate>delegate;
+
+//单例
++ (instancetype)manager;
+
+//开始进行网络请求
+- (void)startNetWorkRequestWithURL:(NSString *)url
+                            method:(NSString *)method
+                        parameters:(NSMutableDictionary *)parameters;
+
+
+
+@end

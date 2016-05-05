@@ -1,0 +1,220 @@
+//
+//  ShoppingDetailViewController.m
+//  shiyan
+//
+//  Created by lanouhn on 15/6/20.
+//  Copyright (c) 2015年 lanouhn. All rights reserved.
+//
+
+#import "ShoppingDetailViewController.h"
+#import "ShoppingCell.h"
+#import "MsgCell.h"
+//#import "HotDetailCell.h"
+
+#import "FoundDedatilTableViewCell.h"
+#import "NetWorkRequest.h"
+#import "ImageDetailViewController.h"
+#import "ReplyViewController.h"
+
+#define kItemWidth ([UIScreen mainScreen].bounds.size.width  - 20) //item的宽度
+#define ImageHeight  (kItemWidth *cell.model.photo_height.floatValue / cell.model.photo_width.floatValue)
+
+@interface ShoppingDetailViewController ()<NetWorkRequestDelegate>
+@property (nonatomic, retain)NSMutableArray *dataArr;
+@end
+
+@implementation ShoppingDetailViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    // Uncomment the following line to preserve selection between presentations.
+    // self.clearsSelectionOnViewWillAppear = NO;
+    
+    // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
+    // self.navigationItem.rightBarButtonItem = self.editButtonItem;
+    
+    [self.tableView registerClass:[FoundDedatilTableViewCell class] forCellReuseIdentifier:@"detail"];
+    [self.tableView registerClass:[MsgCell class] forCellReuseIdentifier:@"msg"];
+    [self.tableView registerClass:[ShoppingCell class] forCellReuseIdentifier:@"shop"];
+    
+    //请求详情的数据
+    NetWorkRequest *request = [[NetWorkRequest alloc]init];
+
+    NSString *url1 = @"http://www.duitang.com/napi/blog/detail/?__dtac=%257B%2522_r%2522%253A%2520%2522565967%2522%257D&";
+    NSString *url2 = [NSString stringWithFormat:@"blog_id=%@",self.blog_id];
+    NSString *url3 = @"&include_fields=tags%2Crelated_albums%2Crelated_albums.covers%2Croot_album%2Cshare_links_2%2Cextra_html%2Ctop_comments%2Ctop_like_users&top_comments_count=12&top_forward_users_count=8&top_like_users_count=8";
+    NSString *url4 = [url1 stringByAppendingString:url2];
+    NSString *url = [url4 stringByAppendingString:url3];
+    
+    [request startNetWorkRequestWithURL:url  method:nil parameters:nil kind:0 orContainChinese:NO];
+    request.delegate = self;
+    [request release];
+}
+
+#pragma mark - NetWorkRequestDelegate
+- (void)getDataSuccessWithObject:(id)object kind:(NSInteger)kind {
+    
+    NSDictionary *dictionary = object[@"data"];
+    HotModel *model = [HotModel createModelWithDic:dictionary];
+    [self.dataArr addObject:model];
+    
+    [self.tableView reloadData];
+}
+- (NSMutableArray *)dataArr {
+    
+    if (!_dataArr) {
+        self.dataArr = [NSMutableArray arrayWithCapacity:0];
+    }
+    return _dataArr;
+}
+- (void)getDataFail {
+    
+    UIAlertView *alertV = [[UIAlertView alloc] initWithTitle:@"提示" message:@"请检查当前网络是否连接" delegate:nil cancelButtonTitle:nil otherButtonTitles:@"确定", nil];
+    [alertV show];
+    [alertV release];
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - Table view data source
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+
+    return 1;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+
+    return 3;
+}
+
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    HotModel *model = [self.dataArr firstObject];
+    if (indexPath.row == 0) {
+        
+        FoundDedatilTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"detail" forIndexPath:indexPath];
+        cell.model = model;
+        if (self.dataArr.count != 0) {
+            cell.imgView.frame = CGRectMake(10, 10, self.view.frame.size.width - 20, kItemWidth *cell.model.photo_height.floatValue / cell.model.photo_width.floatValue);
+            cell.customView.frame = CGRectMake(10, ImageHeight + 20, self.view.frame.size.width - 20, 55);
+            
+            cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        }
+        return cell;
+    }else if (indexPath.row == 1){
+    
+        MsgCell *cell = [tableView dequeueReusableCellWithIdentifier:@"msg" forIndexPath:indexPath];
+        cell.model = model;
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        
+        return cell;
+    }else {
+    ShoppingCell *cell = [tableView dequeueReusableCellWithIdentifier:@"shop" forIndexPath:indexPath];
+        cell.model = model;
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        return cell;
+    }
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+
+    
+    if (indexPath.row == 0) {
+        
+        if (self.dataArr.count == 0) {
+            return 0;
+        }else {
+            HotModel *model = [self.dataArr firstObject];
+            return kItemWidth *model.photo_height.floatValue / model.photo_width.floatValue  + 75;
+        }
+
+    }else if (indexPath.row == 1){
+        
+        HotModel *model = [self.dataArr firstObject];
+        CGRect rect = [model.msg boundingRectWithSize:CGSizeMake(300, 100) options: NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:17]} context:nil];
+        return rect.size.height + 20;
+
+    }else {
+        
+        return 75;
+    }
+
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    
+    if (indexPath.row == 0) {
+        
+        ImageDetailViewController *imageDetail = [[ImageDetailViewController alloc]init];
+        //设置模态的方式
+        imageDetail.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
+        
+        HotModel *model = [self.dataArr firstObject];
+        imageDetail.photo_path = model.photo_path;
+        imageDetail.photo_height = model.photo_height;
+        imageDetail.photo_width = model.photo_width;
+        [self presentViewController:imageDetail animated:YES completion:nil];
+        [imageDetail release];
+    }else {
+        
+//        ReplyViewController *comment = [[ReplyViewController alloc] init];
+//        comment.blog_id = self.blog_id;
+//        [self.navigationController pushViewController:comment animated:YES];
+    }
+}
+
+
+- (void)viewWillAppear:(BOOL)animated {
+    
+    
+    self.hidesBottomBarWhenPushed = YES;
+}
+/*
+// Override to support conditional editing of the table view.
+- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
+    // Return NO if you do not want the specified item to be editable.
+    return YES;
+}
+*/
+
+/*
+// Override to support editing the table view.
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (editingStyle == UITableViewCellEditingStyleDelete) {
+        // Delete the row from the data source
+        [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+    } else if (editingStyle == UITableViewCellEditingStyleInsert) {
+        // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
+    }   
+}
+*/
+
+/*
+// Override to support rearranging the table view.
+- (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
+}
+*/
+
+/*
+// Override to support conditional rearranging of the table view.
+- (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
+    // Return NO if you do not want the item to be re-orderable.
+    return YES;
+}
+*/
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

@@ -1,0 +1,382 @@
+//
+//  MoreTableViewController.m
+//  Duitang
+//
+//  Created by lanouhn on 15/6/23.
+//  Copyright (c) 2015年 lanouhn. All rights reserved.
+//
+
+#import "MoreTableViewController.h"
+#import "MoreTableViewCell.h"
+#import "FoundModel.h"
+#import "TransformToTaoBaoViewController.h"
+#import "RefreshTableViewCell.h"
+#import "ClassificationViewController.h"
+
+@interface MoreTableViewController ()
+@property (nonatomic, retain)NSMutableArray * dataSource;
+@property (nonatomic, retain)NSMutableArray * dateArr;
+@property (nonatomic, retain)NSMutableDictionary * dataDictionary;
+
+@property (nonatomic, retain)UIRefreshControl * refresh;
+
+@property (nonatomic, assign)NSInteger loadCount;
+@end
+
+@implementation MoreTableViewController
+- (NSMutableArray *)dataSource {
+    if (_dataSource == nil) {
+        self.dataSource = [NSMutableArray new];
+    }
+    return _dataSource;
+    
+}
+- (NSMutableArray *)dateArr {
+    if (_dateArr == nil) {
+        self.dateArr = [NSMutableArray new];
+    }
+    return _dateArr;
+    
+}
+- (NSMutableDictionary *)dataDictionary {
+    if (_dataDictionary == nil) {
+        self.dataDictionary = [NSMutableDictionary dictionaryWithCapacity:0];
+    }
+    return _dataDictionary;
+    
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    // Uncomment the following line to preserve selection between presentations.
+    // self.clearsSelectionOnViewWillAppear = NO;
+    
+    // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
+    // self.navigationItem.rightBarButtonItem = self.editButtonItem;
+    self.view.frame = [UIScreen mainScreen].bounds;
+    
+    //self.tableView.contentInset = UIEdgeInsetsMake(0, 10, 0, 10);
+    self.tableView.rowHeight = 60;
+    self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    //进行网络数据的请求
+    NetWorkRequest * requst = [[NetWorkRequest alloc] init];
+    
+    //开始进行网络数据
+    [requst startNetWorkRequestWithURL:@"http://www.duitang.com/napi/ad/banner/list/?__dtac=%257B%2522_r%2522%253A%2520%2522378150%2522%257D&start=0&ad_id=ANA004&limit=12" method:@"GET" parameters:nil kind:0 orContainChinese:
+     NO];
+    //设置代理人
+    requst.delegate = self;
+    [requst release];
+    
+    [self.tableView registerClass:[MoreTableViewCell class] forCellReuseIdentifier:@"more"];
+    [self.tableView registerClass:[RefreshTableViewCell class] forCellReuseIdentifier:@"load"];
+    
+//    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[[UIImage imageNamed:@"return.png"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] style:UIBarButtonItemStyleDone target:self action:@selector(returnBack:)];
+    
+    //添加刷新控件（只能用于tableView表视图）
+    UIRefreshControl * refresh = [[UIRefreshControl alloc] init];
+    //设置刷新时的内容
+    refresh.attributedTitle = [[NSAttributedString alloc] initWithString:@"正在为你刷新"];
+    refresh.tintColor = [UIColor redColor];
+    
+    //为刷新控件添加事件
+    [refresh addTarget:self action:@selector(refreshAction:) forControlEvents:UIControlEventValueChanged];
+    self.refresh = refresh;
+    [self.tableView addSubview:self.refresh];
+    [self.refresh release];
+}
+- (void)refreshAction:(UIRefreshControl *)refrsh {
+    
+    //执行网络数据请求
+    //进行网络数据的请求
+    NetWorkRequest * requst = [[NetWorkRequest alloc] init];
+    
+    //开始进行网络数据
+    [requst startNetWorkRequestWithURL:@"http://www.duitang.com/napi/ad/banner/list/?__dtac=%257B%2522_r%2522%253A%2520%2522378150%2522%257D&start=0&ad_id=ANA004&limit=12" method:@"GET" parameters:nil kind:0 orContainChinese:NO];
+    //设置代理人
+    requst.delegate = self;
+    [requst release];
+    
+    
+}
+
+- (void)getDataSuccessWithObject:(id)object kind:(NSInteger)kind {
+    if (kind == 0) {
+        
+        [self.refresh endRefreshing];
+        
+        [self.dataSource removeAllObjects];
+        [self.dateArr removeAllObjects];
+        
+    }
+    NSLog(@"数目---%lu",(unsigned long)self.dataSource.count);
+    
+    
+    NSMutableArray * arr = object[@"data"][@"object_list"];
+    for (NSDictionary * dic in arr) {
+        FoundModel * model = [FoundModel createFoundModelWithDic:dic];
+        
+        //是否添加数据
+        if ([self.dateArr containsObject:model.date]) {
+            NSMutableArray * contains = [self.dataDictionary objectForKey:model.date];
+            BOOL isContain = NO;
+            for (FoundModel * model1 in contains) {
+                if ([model1.name isEqualToString:model.name]) {
+                    isContain = YES;
+                }
+            }
+            if (isContain == NO) {
+                [contains addObject:model];
+            }
+            
+           
+            
+        } else {
+            [self.dateArr addObject:model.date];
+            //添加数据到指定的分区
+            NSMutableArray * section = [NSMutableArray arrayWithCapacity:0];
+            [section addObject:model];
+            
+            [self.dataDictionary setObject:section forKey:model.date];
+       
+        }
+        
+        
+            //[model release];
+    }
+
+    [self.dateArr sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        return -[obj1 compare:obj2];
+        
+        
+    }];
+    NSLog(@"+--%@",self.dateArr);
+   
+    [self.tableView reloadData];
+    
+}
+
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+    
+    
+    
+}
+- (void)viewWillAppear:(BOOL)animated {
+    
+    
+    self.hidesBottomBarWhenPushed = YES;
+}
+- (void)dealloc {
+    self.dataDictionary = nil;
+    self.dateArr = nil;
+    
+    [super dealloc];
+    
+    
+}
+#pragma mark - Table view data source
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+
+    // Return the number of sections.
+    return self.dateArr.count + 1;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+
+    if (section == self.dateArr.count) {
+        return 1;
+    }
+
+    NSString * str = [self.dateArr objectAtIndex:section];
+    // Return the number of rows in the section.
+    NSArray * arr = [self.dataDictionary objectForKey:str];
+    NSLog(@"section= %lu,row = %lu",(long)section,(unsigned long)arr.count);
+    return arr.count;
+
+    
+}
+
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    
+                
+    if (indexPath.section < self.dateArr.count) {
+    
+        MoreTableViewCell * cell = [tableView dequeueReusableCellWithIdentifier:@"more"];
+    
+        NSString * key = [self.dateArr objectAtIndex:indexPath.section];
+        NSArray * arr = [self.dataDictionary objectForKey:key];
+        NSLog(@"--%lu,__%lu",(long)indexPath.section, (long)indexPath.row);
+        
+        
+        FoundModel * model = arr[indexPath.row];
+        
+        cell.model = model;
+        
+        cell.frame = CGRectMake(10, 0, self.view.frame.size.width - 20, 50);
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        
+        
+        return cell;
+    } else {
+        static NSString *indentify = @"load";
+        RefreshTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:indentify forIndexPath:indexPath];
+        return cell;
+    }
+
+    
+    // Configure the cell...
+    
+    
+}
+//该代理方法在cell将要展示到我们的可视区域的时候触发
+- (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (indexPath.section == self.dateArr.count) {
+        if (indexPath.row == self.dataSource.count) {
+            RefreshTableViewCell *refreshcell = (RefreshTableViewCell *)cell;
+            //        [refreshcell.activityIndicator startAnimating];
+            [refreshcell.activityIndicator startAnimating];
+            
+            //执行网络数据请求
+            
+            NetWorkRequest *request = [[NetWorkRequest alloc]init];
+            
+            //开始进行网络数据请求(kind来判断当前操作是加载还是刷新，0代表刷新，1代表加载)
+            self.loadCount = self.loadCount + 10;
+            NSString * url = [NSString stringWithFormat:@"start=%lu",(long)self.loadCount];
+            url = [@"http://www.duitang.com/napi/ad/banner/list/?__dtac=%257B%2522_r%2522%253A%2520%2522378150%2522%257D&" stringByAppendingString:url];
+            url = [url stringByAppendingString:@"&ad_id=ANA004&limit=12"];
+            [request startNetWorkRequestWithURL:url method:@"GET" parameters:nil kind:1 orContainChinese:NO];
+            
+            //设置代理
+            request.delegate = self;
+            
+            [request release];
+            NSLog(@"----------------------------%lu",(unsigned long)self.dataSource.count);
+        }
+
+    
+    }
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
+    
+    return 50;
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (indexPath.section == self.dateArr.count) {
+        if (indexPath.row < self.dataSource.count) {
+            
+            return 50;
+            
+        }else {
+            return 0;
+        }
+    } else {
+        return 50;
+    }
+}
+
+
+
+    
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
+    UIView * view = [[[UIView alloc] initWithFrame:CGRectMake(10, 0, self.tableView.frame.size.width - 20, 50)] autorelease];
+    UILabel * date = [[[UILabel alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 50)] autorelease];;
+    if (section < self.dateArr.count) {
+        date.text = self.dateArr[section];
+        date.textColor = [UIColor lightGrayColor];
+        //    date.textColor = [UIColor colorWithRed:193/255.0 green:193/255.0 blue:193/255.0 alpha:1.0];;
+        date.backgroundColor = [UIColor colorWithRed:235/255.0 green:235/255.0 blue:235/255.0 alpha:1.0];
+        [view addSubview:date];
+        [self.tableView addSubview:view];
+
+    }
+       return view;
+    
+}
+- (CGRect)rectForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return CGRectMake(10, 0, self.view.frame.size.width - 20, 50);
+    
+    
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    
+    NSLog(@"sfffffffffffffff");
+    
+    
+    NSString * key = [self.dateArr objectAtIndex:indexPath.section];
+    NSArray * arr = [self.dataDictionary objectForKey:key];
+    NSLog(@"--%lu,__%lu",(long)indexPath.section, (long)indexPath.row);
+    
+        
+    FoundModel * model = arr[indexPath.row];
+    if ([model.target_id containsString:@"guide"]) {
+        TransformToTaoBaoViewController * transformToWebVC = [[TransformToTaoBaoViewController alloc] init];
+        transformToWebVC.source_link = model.target_id;
+        [self.navigationController pushViewController:transformToWebVC animated:YES];
+    } else {
+        
+        ClassificationViewController * classVC = [[ClassificationViewController alloc] init];
+        classVC.title = model.name;
+//        classVC.target_id = model.target_id;
+        classVC.target_idHeader = model.target_head;
+        [self.navigationController pushViewController:classVC animated:YES];
+    }
+    
+        
+    
+    
+    
+}
+/*
+// Override to support conditional editing of the table view.
+- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
+    // Return NO if you do not want the specified item to be editable.
+    return YES;
+}
+*/
+
+/*
+// Override to support editing the table view.
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (editingStyle == UITableViewCellEditingStyleDelete) {
+        // Delete the row from the data source
+        [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+    } else if (editingStyle == UITableViewCellEditingStyleInsert) {
+        // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
+    }   
+}
+*/
+
+/*
+// Override to support rearranging the table view.
+- (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
+}
+*/
+
+/*
+// Override to support conditional rearranging of the table view.
+- (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
+    // Return NO if you do not want the item to be re-orderable.
+    return YES;
+}
+*/
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

@@ -1,0 +1,117 @@
+//
+//  NetWorkRequest.m
+//  NetWorkRequest
+//
+//  Created by lanouhn on 15/6/18.
+//  Copyright (c) 2015年 lanouhn. All rights reserved.
+//
+
+#import "NetWorkRequest.h"
+
+@interface NetWorkRequest ()
+
+@property (nonatomic, retain)NSMutableData *data;
+
+@end
+
+
+@implementation NetWorkRequest
+
+//创建单例对象
++ (instancetype)manager {
+
+    static NetWorkRequest *netWork = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        netWork = [[NetWorkRequest alloc]init];
+    });
+    return netWork;
+}
+
+//开始进行网络请求
+- (void)startNetWorkRequestWithURL:(NSString *)url
+                            method:(NSString *)method
+                        parameters:(NSMutableDictionary *)parameters {
+
+    //创建网址对象
+    NSURL *urlRequest = [NSURL URLWithString:[url stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    
+    //设置请求对象
+    NSMutableURLRequest *request = [[[NSMutableURLRequest alloc]initWithURL:urlRequest] autorelease];
+    
+    if ([method isEqualToString:@"POST"]) {
+        
+        //设置请求方式
+        request.HTTPMethod = method;
+        
+        //设置请求体
+        NSString *parameter = [self dealWithParameters:parameters];
+        [request setHTTPBody:[parameter dataUsingEncoding:NSUTF8StringEncoding]];
+    }
+    
+    //进行网络请求
+    [NSURLConnection connectionWithRequest:request delegate:self];
+}
+
+//处理参数
+- (NSString *)dealWithParameters:(NSMutableDictionary *)parameters {
+
+    //创建数组存储固定格式的参数和参数对应的值
+    NSMutableArray *parameterStrs = [NSMutableArray arrayWithCapacity:0];
+    for (NSString *key in [parameters allKeys]) {
+        
+        //将参数和对应的值拼接成固定的格式
+        NSString *parameterStr = [NSString stringWithFormat:@"%@=%@",key,parameters[key]];
+        [parameterStrs addObject:parameterStr];
+    }
+    //将数组中的对象以&符号分隔开，拼接成一个字符串
+    return [parameterStrs componentsJoinedByString:@"&"];
+}
+
+#pragma mark NSURLConnectionDataDelegate
+
+//当接收到服务器回应的时候调用
+- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
+
+    //初始化data
+    self.data = [NSMutableData dataWithCapacity:0];
+}
+
+- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
+
+    //数据拼接
+    [self.data appendData:data];
+}
+
+- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+
+    //解析数据
+    id object = [NSJSONSerialization JSONObjectWithData:self.data options:NSJSONReadingMutableContainers error:nil];
+    
+    //数据回调
+    if (self.delegate && [self.delegate respondsToSelector:@selector(getDataSuccessWithObject:)]) {
+        [self.delegate getDataSuccessWithObject:object];
+    }
+    
+}
+
+- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
+
+    if (self.delegate && [self.delegate respondsToSelector:@selector(getDataFail)]) {
+        
+        [self.delegate getDataFail];
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+@end

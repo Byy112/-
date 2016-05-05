@@ -1,0 +1,42 @@
+//
+//  HotModel.h
+//  ceshi
+//
+//  Created by lanouhn on 15/6/18.
+//  Copyright (c) 2015年 lanouhn. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface HotModel : NSObject
+
+@property (nonatomic, copy)NSString *album_name;
+@property (nonatomic, copy)NSString *photo_path;
+@property (nonatomic, retain)NSNumber *photo_height;
+@property (nonatomic, retain)NSNumber *photo_width;
+@property (nonatomic, retain)NSNumber *like_count;
+@property (nonatomic, retain)NSNumber *reply_count;
+@property (nonatomic, copy)NSString *sender_username;
+@property (nonatomic, copy)NSString *sender_avatar;
+@property (nonatomic, retain)NSNumber *favorite_count;
+@property (nonatomic, copy)NSString *blog_id;
+@property (nonatomic, copy)NSString *msg;
+
+/**************************************************/
+//热门表头/Users/lanouhn/Downloads/HotModel.h
+@property (nonatomic, retain)NSString * description_tille;
+@property (nonatomic, retain)NSString * enabled_at_str;
+@property (nonatomic, retain)NSString * target;
+@property (nonatomic, retain)NSString * image_url;
+
+@property (nonatomic, retain)NSString * content;
+//@property (nonatomic, retain)NSString * sender_username;
+@property (nonatomic, retain)NSString * club_name;
+
+
+/*****************************************************/
+//
+
+
++ (HotModel *)createModelWithDic:(NSDictionary *)dic;
+@end

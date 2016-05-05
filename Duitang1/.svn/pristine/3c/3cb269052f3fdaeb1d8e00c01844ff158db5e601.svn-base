@@ -1,0 +1,79 @@
+//
+//  RootViewController.m
+//  Duitang
+//
+//  Created by lanouhn on 15/6/17.
+//  Copyright (c) 2015年 lanouhn. All rights reserved.
+//
+
+#import "RootViewController.h"
+#import "HotViewController.h"
+#import "FoundViewController.h"
+#import "AddViewController.h"
+#import "MineInformationViewController.h"
+
+@interface RootViewController ()
+
+@end
+
+@implementation RootViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+    self.view.backgroundColor = [UIColor whiteColor];
+    [self createView];
+    
+}
+- (void)createView {
+    self.tabBar.translucent = NO;
+    
+    
+    HotViewController * hotVC = [[HotViewController alloc] init];
+    UINavigationController * hotNavC = [[UINavigationController alloc] initWithRootViewController:hotVC];
+    FoundViewController * foundVC = [[FoundViewController alloc] init];
+    UINavigationController * foundNavC = [[UINavigationController alloc] initWithRootViewController:foundVC];
+    AddViewController * addVC = [[AddViewController alloc] init];
+    UINavigationController * addNavC = [[UINavigationController alloc] initWithRootViewController:addVC];
+    MineInformationViewController * mineVC = [[MineInformationViewController alloc] init];
+    UINavigationController * mineNavC = [[UINavigationController alloc] initWithRootViewController:mineVC];
+    
+    self.viewControllers = @[hotNavC,foundNavC,addNavC,mineNavC];
+    //self.tabBar.barTintColor = [UIColor yellowColor];
+    //self.tabBar.tintColor = [UIColor blackColor];
+    
+    
+    hotNavC.tabBarItem.title = @"首页";
+    foundNavC.title = @"发现";
+    addNavC.tabBarItem.title = @"添加";
+    mineNavC.tabBarItem.title = @"我的";
+    
+
+    
+    [hotVC release];
+    [hotNavC release];
+    [foundVC release];
+    [foundNavC release];
+    [addVC release];
+    [addNavC release];
+    [mineVC release];
+    [mineNavC release];
+
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

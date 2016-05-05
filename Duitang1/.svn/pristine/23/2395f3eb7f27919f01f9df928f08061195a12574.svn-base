@@ -1,0 +1,71 @@
+//
+//  CommentCountCell.m
+//  shiyan
+//
+//  Created by lanouhn on 15/6/20.
+//  Copyright (c) 2015年 lanouhn. All rights reserved.
+//
+
+#import "CommentCountCell.h"
+
+@implementation CommentCountCell
+
+- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
+    
+    self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
+    if (self) {
+        //添加子控件
+        [self.contentView addSubview:self.commentLabel];
+        [self.contentView addSubview:self.commentCountLabel];
+    }
+    return self;
+}
+
+- (UILabel *)commentLabel {
+
+    if (!_commentLabel) {
+        
+        self.commentLabel = [[UILabel alloc]initWithFrame:CGRectMake(10, 10, 40, 40)];
+        _commentLabel.text = @"评论";
+        
+    }
+    return [[_commentLabel retain] autorelease];
+}
+- (UILabel *)commentCountLabel {
+
+    if (!_commentCountLabel) {
+        self.commentCountLabel = [[UILabel alloc]initWithFrame:CGRectMake(52, 10, 40, 40)];
+//        _commentCountLabel.backgroundColor = [UIColor yellowColor];
+
+    }
+   return [[_commentCountLabel retain] autorelease];
+}
+
+//重写setter方法，为label赋值
+- (void)setModel:(HotModel *)model {
+    
+    if (_model != model) {
+        [_model release];
+        _model = [model retain];
+    }
+    
+    self.commentCountLabel.text = [NSString stringWithFormat:@"%@", _model.reply_count ];
+}
+
+- (void)awakeFromNib {
+    // Initialization code
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+- (void)dealloc {
+
+    self.commentCountLabel = nil;
+    self.commentLabel = nil;
+    [super dealloc];
+}
+@end

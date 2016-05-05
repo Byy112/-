@@ -1,0 +1,64 @@
+//
+//  VendaTableViewCell.m
+//  Duitang
+//
+//  Created by lanouhn on 15/6/23.
+//  Copyright (c) 2015年 lanouhn. All rights reserved.
+//
+
+#import "VendaTableViewCell.h"
+#import "FoundModel.h"
+
+@implementation VendaTableViewCell
+- (UIImageView *)photo {
+    if (_photo == nil) {
+        self.photo = [[UIImageView alloc] initWithFrame:CGRectMake(10, 10, self.contentView.frame.size.width / 10, self.contentView.frame.size.height - 20)];
+        _photo.image = [UIImage imageNamed:@"1.jpg"];
+        _photo.layer.cornerRadius = self.contentView.frame.size.width / 20;
+        [self.contentView addSubview:_photo];
+    }
+    return _photo;
+}
+- (UILabel *)name {
+    if (_name == nil) {
+        self.name = [[UILabel alloc] initWithFrame:CGRectMake(self.frame.size.width / 10 + 20, 10, self.contentView.frame.size.width / 2, 27)];
+        [self.contentView addSubview:_name];
+    }
+    return _name;
+}
+- (UILabel *)title {
+    if (_title == nil) {
+        self.title = [[UILabel alloc] initWithFrame:CGRectMake(self.frame.size.width / 10 + 20, 35, self.contentView.frame.size.width / 2, 24)];
+        _title.textColor = [UIColor lightGrayColor];
+        [self.contentView addSubview:_title];
+    }
+    return _title;
+    
+}
+- (UIButton *)button {
+    if (_button == nil) {
+        self.button = [UIButton buttonWithType:UIButtonTypeSystem];
+        _button.frame = CGRectMake(self.frame.size.width - 120, 10, 110, 45);
+        [_button setTintColor:[UIColor greenColor]];
+        [_button setTitle:@"关注" forState:UIControlStateNormal];
+        [_button setTitle:@"已关注" forState:UIControlStateSelected];
+        [_button setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        [_button setTitleColor:[UIColor greenColor] forState:UIControlStateSelected];
+        [self.contentView addSubview:_button];
+        
+    }
+    return _button;
+    
+}
+
+- (void)awakeFromNib {
+    // Initialization code
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+@end

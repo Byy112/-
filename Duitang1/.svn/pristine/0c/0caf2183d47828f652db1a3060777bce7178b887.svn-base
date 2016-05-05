@@ -1,0 +1,32 @@
+//
+//  ScrollCollectionViewCell.m
+//  Duitang
+//
+//  Created by lanouhn on 15/6/19.
+//  Copyright (c) 2015年 lanouhn. All rights reserved.
+//
+
+#import "ScrollCollectionViewCell.h"
+#import "ScrollView.h"
+@implementation ScrollCollectionViewCell
+- (instancetype)initWithFrame:(CGRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) {
+        [self createMyScrollView];
+    }
+    return self;
+}
+- (void)createMyScrollView {
+    ScrollView * scroll = [[ScrollView alloc] initWithFrame:self.contentView.bounds];
+    self.myScroll = scroll;
+    [self.contentView addSubview:self.myScroll];
+    [scroll release];
+    
+}
+
+- (void)dealloc {
+    self.myScroll = nil;
+    [super dealloc];
+ 
+}
+@end

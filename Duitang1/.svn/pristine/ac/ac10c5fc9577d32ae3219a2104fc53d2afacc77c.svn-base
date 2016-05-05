@@ -1,0 +1,58 @@
+//
+//  MoreTableViewCell.m
+//  Duitang
+//
+//  Created by lanouhn on 15/6/23.
+//  Copyright (c) 2015年 lanouhn. All rights reserved.
+//
+
+#import "MoreTableViewCell.h"
+#import "FoundModel.h"
+#import "UIImageView+WebCache.h"
+
+@implementation MoreTableViewCell
+- (UIImageView *)photo {
+    if (_photo == nil) {
+        self.photo = [[UIImageView alloc] initWithFrame:CGRectMake(self.contentView.frame.size.width - 50, 10, 40, 40)];
+        _photo.backgroundColor = [UIColor lightGrayColor];
+        _photo.userInteractionEnabled = YES;
+        UITapGestureRecognizer * tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(click:)];
+        [_photo addGestureRecognizer:tap];
+        [self.contentView addSubview:_photo];
+        
+    }
+    return _photo;
+}
+- (void)click:(UITapGestureRecognizer *)tap {
+    
+    
+}
+
+- (UILabel *)tilteLabel {
+    if (_tilteLabel == nil) {
+        self.tilteLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, 15, self.contentView.frame.size.width - 60, 30)];
+        _tilteLabel.text = @"夏日假期";
+        [self.contentView addSubview:_tilteLabel];
+    }
+    return _tilteLabel;
+}
+- (void)setModel:(FoundModel *)model {
+    if (_model != model) {
+        [_model release];
+        _model = [model retain];
+    }
+    
+    self.tilteLabel.text = model.name;
+    [self.photo sd_setImageWithURL:[NSURL URLWithString:model.icon_url] placeholderImage:[UIImage imageNamed:@"1.jpg"]];
+}
+- (void)awakeFromNib {
+    // Initialization code
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+@end

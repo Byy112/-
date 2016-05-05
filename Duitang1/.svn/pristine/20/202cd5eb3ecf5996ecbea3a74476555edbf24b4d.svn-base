@@ -1,0 +1,327 @@
+//
+//  FoundViewController.m
+//  Duitang
+//
+//  Created by lanouhn on 15/6/17.
+//  Copyright (c) 2015年 lanouhn. All rights reserved.
+//
+
+#import "FoundViewController.h"
+#import "ListOfProductsViewCell.h"
+#import "ScrollCollectionViewCell.h"
+#import "StoreViewCell.h"
+#import "SearchViewController.h"
+
+#import "PreferentialViewController.h"
+#import "Manager.h"
+
+#define NavigationBarHight 60.0f
+#define ImageHeight 150.0f
+
+@interface FoundViewController ()
+
+//指定数组存储对应的DataModel对象
+@property (nonatomic, retain)NSMutableArray *dataSource;
+//创建集合视图属性，接收创建的集合视图的对象
+@property (nonatomic, retain)UICollectionView *collectionView;
+
+@property (nonatomic, retain)NSArray * nameArr;
+//基部视图，存放所有的视图
+@property (nonatomic, retain)UIScrollView * containers;
+//底部视图，存放下方的视图
+@property (nonatomic, retain)UIView * bottom;
+@end
+
+@implementation FoundViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+//    self.navigationController.navigationBar.translucent = NO;
+    self.navigationItem.title = @"发现";
+    self.view.backgroundColor = [UIColor lightGrayColor];
+    self.nameArr = [NSArray arrayWithObjects:@[@"美食菜谱",@"家居生活",@"影音书"],@[@"壁纸",@"头像",@"表情"],@[@"时尚搭配",@"美容美发",@"美发造型"],@[@"文字句子",@"手工DIY",@"插画绘画"],@[@"婚纱婚礼",@"旅行",@"摄影"],@[@"人物明星",@"动画漫画",@"萌物萌娃"], nil];
+    [Manager sharedManager].navigationController = self.navigationController;
+    [self creatSearchBar];
+    [self createCollectView];
+    
+}
+
+
+- (void)createCollectView {
+    UICollectionViewFlowLayout * flowLayout = [[UICollectionViewFlowLayout alloc] init];
+    //    flowLayout.itemSize = CGSizeMake(self.view.bounds.size.width / 2 - 5, self.view.bounds.size.height / 5);
+    
+    flowLayout.itemSize = CGSizeMake(190, 220);
+    flowLayout.sectionInset = UIEdgeInsetsMake(0 , 9, 2, 9);
+    flowLayout.minimumLineSpacing = 2;
+    flowLayout.minimumInteritemSpacing = 2;
+    
+//    self.navigationController.navigationBar.barTintColor = [UIColor cyanColor];
+//    self.navigationController.navigationBar.tintColor = [UIColor whiteColor];
+//    self.navigationItem.title = @"实现拖动放大列表顶部的图片";
+    
+    self.collectView = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height - 45) collectionViewLayout:flowLayout];
+    self.collectView.delegate = self;
+    self.collectView.dataSource = self;
+    self.collectView.backgroundColor = [UIColor colorWithRed:235 / 255.0 green:235 / 255.0 blue:235 / 255.0 alpha:1.0];
+//    self.collectView.backgroundColor = [UIColor lightGrayColor];
+    
+    self.collectView.contentInset = UIEdgeInsetsMake(ImageHeight, 0, 0, 0);
+    
+    [self.view addSubview:self.collectView];
+    
+    //self.collectView.tableFooterView = [UIView new];
+    
+    self.zoomImageView = [[UIImageView alloc]initWithImage:[UIImage imageNamed:@"2.jpg"]];
+    self.zoomImageView.frame = CGRectMake(0, -ImageHeight, self.view.frame.size.width, ImageHeight -10);
+    self.zoomImageView.contentMode = UIViewContentModeScaleAspectFill; //(不设置那将只会被纵向拉伸)
+    
+    [self.collectView addSubview:self.zoomImageView];
+    self.zoomImageView.autoresizesSubviews = YES; //让子类自动布局
+    self.circleView = [[UIImageView alloc]initWithFrame:CGRectMake(0, ImageHeight - 60, 40, 40)];
+    self.circleView.backgroundColor = [UIColor redColor];
+    
+    self.circleView.layer.cornerRadius = 7.5f;
+    self.circleView.image = [UIImage imageNamed:@"2.jpg"];
+    
+    self.circleView.clipsToBounds = YES;
+    self.circleView.autoresizingMask = UIViewAutoresizingFlexibleTopMargin; //自动布局，自适应顶部
+    
+    [self.zoomImageView addSubview:self.circleView];
+    
+    self.textLabel = [[UILabel alloc]initWithFrame:CGRectMake(60, ImageHeight - 20, 280, 20)];
+    self.textLabel.textColor = [UIColor whiteColor];
+    
+    self.textLabel.text = @"namelabel";
+    
+    self.textLabel.autoresizingMask = UIViewAutoresizingFlexibleTopMargin;
+    
+    [self.zoomImageView addSubview:self.textLabel];
+    
+    [self.collectView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:@"cell"];
+    [self.collectView registerClass:[ScrollCollectionViewCell class] forCellWithReuseIdentifier:@"scrollCell"];
+    [self.collectView registerClass:[ListOfProductsViewCell class] forCellWithReuseIdentifier:@"listCell"];
+    [self.collectView registerClass:[StoreViewCell class] forCellWithReuseIdentifier:@"storeCell"];
+    
+}
+- (void)creatSearchBar {
+    //创建一个UISearch
+    self.searchBar = [[UISearchBar alloc] initWithFrame:CGRectMake(10, 0,self.view.frame.size.width - 20, 50)];
+    //设置样式
+    self.searchBar.barStyle = UIBarStyleDefault;
+    //设置
+    self.searchBar.barTintColor = [UIColor orangeColor];
+    //占位
+    self.searchBar.placeholder = @"搜索感兴趣的内容...";
+//    //是否显示分栏
+//    self.searchBar.showsScopeBar = NO;
+//    //设置分栏的标题
+//    self.searchBar.scopeButtonTitles = @[@"联系人",@"通话记录"];
+//    //设置默认选中的分栏
+//    self.searchBar.selectedScopeButtonIndex = 0;
+    //设置是否显示取消按钮
+    self.searchBar.showsCancelButton = NO;
+    //设置代理
+    self.searchBar.delegate = self;
+    [self.navigationController.navigationBar addSubview:self.searchBar];
+    
+    _searchController = [[SearchViewController alloc] initWithStyle:UITableViewStylePlain];
+    [_searchController.view setFrame:CGRectMake(30, 40, 200, 0)];
+    
+    
+    [self.view addSubview:_searchController.view];
+    
+}
+
+//
+- (void) setSearchControllerHidden:(BOOL)hidden {
+    NSInteger height = hidden ? 0: 180;
+    [UIView beginAnimations:nil context:nil];
+    [UIView setAnimationDuration:0.2];
+    
+    [_searchController.view setFrame:CGRectMake(30, 36, 200, height)];
+    [UIView commitAnimations];
+}
+//
+
+
+
+#pragma mark - UISearchBarDelegate
+//当搜索输入框变化时调用该方法
+- (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText {
+    if (searchBar.selectedScopeButtonIndex == 0) {
+        self.showData = nil;
+        for (NSString * str in self.dataList) {
+            if ([str rangeOfString:searchText options:NSCaseInsensitiveSearch].length > 0) {
+                [self.showData addObject:str];
+            }
+        }
+        [self.collectionView reloadData];
+        
+    }
+    
+    if (_searchBar.text.length == 0) {
+        [self setSearchControllerHidden:YES]; //控制下拉列表的隐现
+    }else{
+        [self setSearchControllerHidden:NO];
+        
+    }
+}
+- (BOOL)searchBarShouldBeginEditing:(UISearchBar *)searchBar {
+    searchBar.showsCancelButton = YES;
+    for(id cc in [searchBar subviews])
+    {
+        if([cc isKindOfClass:[UIButton class]])
+        {
+            UIButton *btn = (UIButton *)cc;
+            [btn setTitle:@"取消" forState:UIControlStateNormal];
+        }
+    }
+    NSLog(@"shuould begin"); 
+    return YES; 
+}
+
+- (void)searchBarTextDidEndEditing:(UISearchBar *)searchBar {
+    NSLog(@"did end");
+    searchBar.showsCancelButton = NO;
+    
+}
+
+- (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar {
+    NSLog(@"search clicked");
+}
+
+//当点击取消按钮时调用
+- (void)searchBarCancelButtonClicked:(UISearchBar *)searchBar {
+    searchBar.text = @"";
+    [_searchBar resignFirstResponder];
+    [self setSearchControllerHidden:YES];
+    
+}
+
+//
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    CGFloat y = scrollView.contentOffset.y + NavigationBarHight;
+    if (y < -ImageHeight) {
+        CGRect frame = self.zoomImageView.frame;
+        frame.origin.y = y;
+        frame.size.height = -y;
+        self.zoomImageView.frame = frame;
+    }
+}
+
+- (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView {
+    return 3;
+    
+}
+
+
+//返回每一个cell
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
+    if (indexPath.section == 0) {
+        static NSString *identifier = @"scrollCell";
+        ScrollCollectionViewCell * cell= [collectionView dequeueReusableCellWithReuseIdentifier:identifier forIndexPath:indexPath];
+        
+        // cell.clipsToBounds = YES;
+       
+        return cell;
+    }else if (indexPath.section == 1) {
+        static NSString *identifier = @"storeCell";
+        StoreViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:identifier forIndexPath:indexPath];
+        
+        cell.clipsToBounds = YES;
+        
+        if (indexPath.row == 0) {
+            [cell setButtonTitle:@"良品购"];
+            
+        }else {
+            [cell setButtonTitle:@"特卖惠"];
+        }
+        return cell;
+        
+    }else {
+        static NSString *identifier = @"listCell";
+        ListOfProductsViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:identifier forIndexPath:indexPath];
+        NSArray * arr = self.nameArr[indexPath.row];
+        [cell.button1 setTitle:arr[0] forState:UIControlStateNormal];
+        [cell.button2 setTitle:arr[1] forState:UIControlStateNormal];
+        [cell.button3 setTitle:arr[2] forState:UIControlStateNormal];
+        cell.backgroundColor = [UIColor whiteColor];
+        return cell;
+        
+        // cell.clipsToBounds = YES;
+        
+    
+    }
+}
+//返回每一个分区的行数
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
+    if (section == 0) {
+        return 1;
+    } else if (section == 1) {
+        return 2;
+    } else {
+        return 6;
+    }
+}
+//返回每一个cell的尺寸
+- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
+    if (indexPath.section == 0) {
+        return CGSizeMake(self.view.frame.size.width, 160);
+    } else if (indexPath.section == 1) {
+        return CGSizeMake(self.view.frame.size.width / 2 - 10, 60);
+        
+    }
+    return CGSizeMake(self.view.bounds.size.width / 2 - 10, self.view.bounds.size.height / 4 - 10);
+}
+- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout referenceSizeForHeaderInSection:(NSInteger)section {
+    if (section == 1) {
+        return CGSizeMake(self.view.frame.size.width, 20);
+    }else {
+        return CGSizeMake(self.view.frame.size.width, 0);
+    }
+    
+}
+
+#pragma UICollectionViewDelegateFlowLayout
+////返回每一个cell的尺寸
+//- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
+//    return CGSizeMake(self.view.bounds.size.width / 2 - 7.5, self.view.bounds.size.height / 3 - 10);
+//}
+#pragma UICollectionViewDelegate
+//点击cell响应点击操作
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
+    NSLog(@"egeg");
+    if (indexPath.section == 1) {
+        if (indexPath.row == 1) {
+            PreferentialViewController * preVC = [[PreferentialViewController alloc] init];
+            [self.navigationController pushViewController:preVC animated:YES];
+            NSLog(@"gerg");
+        }
+    }
+}
+
+
+- (void)dealloc {
+    self.dataSource = nil;
+    self.collectionView = nil;
+    [super dealloc];
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

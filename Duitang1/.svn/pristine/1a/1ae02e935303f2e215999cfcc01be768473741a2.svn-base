@@ -1,0 +1,23 @@
+//
+//  Manager.m
+//  Duitang
+//
+//  Created by lanouhn on 15/6/20.
+//  Copyright (c) 2015年 lanouhn. All rights reserved.
+//
+
+#import "Manager.h"
+
+@implementation Manager
+
++ (Manager *)sharedManager {
+    static Manager * manager = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        manager = [[Manager alloc] init];
+    });
+    return manager;
+    
+}
+
+@end

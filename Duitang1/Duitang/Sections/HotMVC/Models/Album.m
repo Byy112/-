@@ -1,0 +1,30 @@
+//
+//  Album.m
+//  Duitang
+//
+//  Created by lanouhn on 15/6/28.
+//  Copyright (c) 2015年 lanouhn. All rights reserved.
+//
+
+#import "Album.h"
+
+@implementation Album
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    
+    [aCoder encodeObject:self.album_name forKey:@"album_name"];
+    [aCoder encodeObject:self.image forKey:@"imag"];
+    [aCoder encodeObject:self.album_id forKey:@"album_id"];
+}
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+ 
+    self.album_name = [aDecoder decodeObjectForKey:@"album_name"];
+    self.image = [aDecoder decodeObjectForKey:@"image"];
+    self.album_id = [aDecoder decodeObjectForKey:@"album_id"];
+    
+    return self;
+}
+
+@end

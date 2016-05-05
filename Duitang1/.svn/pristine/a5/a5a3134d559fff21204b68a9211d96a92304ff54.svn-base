@@ -1,0 +1,191 @@
+//
+//  CommentViewController.m
+//  shiyan
+//
+//  Created by lanouhn on 15/6/24.
+//  Copyright (c) 2015年 lanouhn. All rights reserved.
+//
+
+#import "ReplyViewController.h"
+#import "CommentCell.h"
+#import "NetWorkRequest.h"
+#import "CommentObjectList.h"
+#import "RefreshTableViewCell.h"
+
+@interface ReplyViewController ()<NetWorkRequestDelegate>
+@property (nonatomic, retain)NSMutableArray *dataArr;
+@property (nonatomic)NSInteger loadCount;//加载的次数
+@property (nonatomic, retain)UIRefreshControl *refresh;//创建刷新控件
+@end
+
+@implementation ReplyViewController
+- (NSMutableArray *)dataArr {
+
+    if (!_dataArr) {
+        self.dataArr = [NSMutableArray arrayWithCapacity:0];
+    }
+    return [[_dataArr retain] autorelease];
+}
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    self.navigationItem.title = @"评论";
+    [self.tableView registerClass:[CommentCell class] forCellReuseIdentifier:@"cell"];
+    [self.tableView registerClass:[RefreshTableViewCell class] forCellReuseIdentifier:@"refresh"];
+    
+    NetWorkRequest *request = [[NetWorkRequest alloc] init];
+    NSString *url = [NSString stringWithFormat:@"http://www.duitang.com/napi/comment/list/?start=0&comment_message_id=%@",self.blog_id];
+    [request startNetWorkRequestWithURL:url method:nil parameters:nil kind:0 orContainChinese:NO];
+    request.delegate = self;
+    [request release];
+    
+    self.refresh = [[UIRefreshControl alloc] init];
+    self.refresh.attributedTitle = [[NSAttributedString alloc] initWithString:@"努力加载中~"];
+    [self.refresh addTarget:self action:@selector(refreshAction:) forControlEvents:UIControlEventValueChanged];
+    [self.tableView addSubview:self.refresh];
+    [self.refresh release];
+    
+}
+- (void)refreshAction:(UIRefreshControl *)refresh {
+    
+    //执行网络数据请求
+    NetWorkRequest *request = [[NetWorkRequest alloc]init];
+    //开始进行网络数据请求
+    NSString *url = [NSString stringWithFormat:@"http://www.duitang.com/napi/comment/list/?start=0&comment_message_id=%@",self.blog_id];
+    [request startNetWorkRequestWithURL:url method:nil parameters:nil kind:0 orContainChinese:NO];
+    //设置代理
+    request.delegate = self;
+    [request release];
+}
+
+#pragma mark - NetWorkRequestDelegate
+- (void)getDataSuccessWithObject:(id)object kind:(NSInteger)kind {
+
+    if (kind == 0) {
+        [self.refresh endRefreshing];
+        [self.dataArr removeAllObjects];
+    }
+    NSArray *arr = object[@"data"][@"object_list"];
+    [arr enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+        CommentObjectList *comment = [CommentObjectList createModelWithDic:(NSDictionary *)obj];
+        [self.dataArr addObject:comment];
+    }];
+    [self.tableView reloadData];
+}
+- (void)getDataFail {
+    
+    UIAlertView *alertV = [[UIAlertView alloc] initWithTitle:@"提示" message:@"请检查当前网络是否连接" delegate:nil cancelButtonTitle:nil otherButtonTitles:@"确定", nil];
+    [alertV show];
+    [alertV release];
+}
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - Table view data source
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+
+    return 1;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+
+    return self.dataArr.count + 1;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    
+    if (indexPath.row == self.dataArr.count) {
+        RefreshTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"refresh" forIndexPath:indexPath];
+        return cell;
+    }else {
+    
+        CommentCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
+        cell.commentModel = self.dataArr[indexPath.row];
+        return cell;
+    }
+}
+
+- (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
+    
+    if (indexPath.row == self.dataArr.count) {
+        RefreshTableViewCell *refreshCell = (RefreshTableViewCell *)cell;
+        [refreshCell.activityIndicator startAnimating];
+        //执行网络请求
+        NetWorkRequest *request = [[NetWorkRequest alloc]init];
+        self.loadCount = self.loadCount + 1;
+        NSString *url = [NSString stringWithFormat:@"http://www.duitang.com/napi/comment/list/?start=%ld&comment_message_id=%@",(long)self.loadCount,self.blog_id];
+        
+        //开始进行网络数据请求(kind来判断当前操作是加载还是刷新，0代表刷新，1代表加载)
+        [request startNetWorkRequestWithURL:url method:nil parameters:nil kind:1 orContainChinese:NO];
+        request.delegate = self;
+        [request release];
+    }
+
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+
+    if (indexPath.row < self.dataArr.count) {
+        CommentObjectList *model = self.dataArr[indexPath.row];
+        CGRect contentRect = [model.content boundingRectWithSize:CGSizeMake(300, 100) options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:15]} context:nil];
+        return contentRect.size.height + 45;
+    }else {
+    
+        return 0;
+    }
+}
+
+- (void)dealloc {
+
+    self.dataArr = nil;
+    self.refresh = nil;
+    self.blog_id = nil;
+    [super dealloc];
+}
+/*
+// Override to support conditional editing of the table view.
+- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
+    // Return NO if you do not want the specified item to be editable.
+    return YES;
+}
+*/
+
+/*
+// Override to support editing the table view.
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (editingStyle == UITableViewCellEditingStyleDelete) {
+        // Delete the row from the data source
+        [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+    } else if (editingStyle == UITableViewCellEditingStyleInsert) {
+        // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
+    }   
+}
+*/
+
+/*
+// Override to support rearranging the table view.
+- (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
+}
+*/
+
+/*
+// Override to support conditional rearranging of the table view.
+- (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
+    // Return NO if you do not want the item to be re-orderable.
+    return YES;
+}
+*/
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

@@ -1,0 +1,41 @@
+//
+//  ScrollCollectionViewCell.m
+//  Duitang
+//
+//  Created by lanouhn on 15/6/19.
+//  Copyright (c) 2015年 lanouhn. All rights reserved.
+//
+
+#import "ScrollCollectionViewCell.h"
+#import "ScrollView.h"
+@implementation ScrollCollectionViewCell
+- (instancetype)initWithFrame:(CGRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) {
+        [self createMyLabel];
+        [self createMyScrollView];
+    }
+    return self;
+}
+- (void)createMyLabel {
+    UILabel * label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, self.contentView.frame.size.width, 40)];
+    label.backgroundColor = [UIColor whiteColor];
+    label.text = @"流行趋势";
+    self.myLabel = label;
+    [self.contentView addSubview:self.myLabel];
+}
+- (void)createMyScrollView {
+    ScrollView * scroll = [[ScrollView alloc] initWithFrame:CGRectMake(0, 35, self.contentView.frame.size.width, self.contentView.frame.size.height - 40)];
+    self.myScroll = scroll;
+    [self.contentView addSubview:self.myScroll];
+    [scroll release];
+    
+}
+
+- (void)dealloc {
+    self.myLabel = nil;
+    self.myScroll = nil;
+    [super dealloc];
+ 
+}
+@end

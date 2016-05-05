@@ -1,0 +1,24 @@
+//
+//  StoreViewCell.h
+//  Duitang
+//
+//  Created by lanouhn on 15/6/20.
+//  Copyright (c) 2015年 lanouhn. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+@class FoundModel;
+@interface StoreViewCell : UICollectionViewCell
+
+@property (nonatomic, retain)UIButton * button;
+@property (nonatomic, copy)NSString * URL;
+
+@property (nonatomic, retain)FoundModel * model;
+@property (nonatomic, retain)UIImageView * imageView;
+
+
+- (void)setImageViewWithImage:(UIImage *)image;
+- (void)setButtonTitle:(NSString *)str;
+
+
+@end

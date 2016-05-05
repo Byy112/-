@@ -1,0 +1,39 @@
+//
+//  NetWorkRequest.h
+//  NetWorkRequest
+//
+//  Created by lanouhn on 15/6/3.
+//  Copyright (c) 2015年 李加奇. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+////定义一个成功回调
+//typedef void(^successBlock)(id object);
+//
+////定义一个失败回调
+//typedef void(^failBlock)();
+//创建协议将请求的数据传给指定的界面对象
+@protocol NetWorkRequestDelegate <NSObject>
+
+- (void)getDataSuccessWithObject:(id)object kind:(NSInteger)kind;
+
+@end
+
+
+@interface NetWorkRequest : NSObject<NSURLConnectionDataDelegate,NSURLConnectionDelegate>
+//创建代理人对象
+@property (nonatomic, assign)id<NetWorkRequestDelegate>delegate;
+
+//@property (nonatomic, copy)successBlock successblock;
+//
+//@property (nonatomic, copy)failBlock failblock;
+//开始进行网络请求
+- (void)startNetWorkRequestWithURL:(NSString *)urlstr
+                            method:(NSString *)method
+                        parameters:(NSMutableDictionary *)parameters
+                              kind:(NSInteger)kind orContainChinese:(BOOL)orContain;
+
+//取消当前的网络请求
+- (void)cancleNetWorkRequest;
+@end

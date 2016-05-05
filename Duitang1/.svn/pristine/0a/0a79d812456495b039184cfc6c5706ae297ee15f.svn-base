@@ -1,0 +1,87 @@
+//
+//  HeaderView.m
+//  Duitang
+//
+//  Created by lanouhn on 15/6/22.
+//  Copyright (c) 2015年 lanouhn. All rights reserved.
+//
+
+#import "HeaderView.h"
+#import "UIImageView+WebCache.h"
+#import "FoundModel.h"
+#import "Manager.h"
+#import "TransformToTaoBaoViewController.h"
+
+@implementation HeaderView
+
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect {
+    // Drawing code
+}
+*/
+- (instancetype)initWithFrame:(CGRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) {
+        [self createImage];
+    }
+    
+    return self;
+}
+- (void)createImage {
+    self.venda = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, self.bounds.size.width / 3, self.bounds.size.height)];
+    self.venda.userInteractionEnabled = YES;
+    self.venda.image = [UIImage imageNamed:@"2.png"];
+    UITapGestureRecognizer * tap1 = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(enterVenda:)];
+    [self.venda addGestureRecognizer:tap1];
+    [self addSubview:self.venda];
+    
+    self.club = [[UIImageView alloc] initWithFrame:CGRectMake(self.bounds.size.width / 3, 0, self.bounds.size.width / 3, self.bounds.size.height)];
+    UITapGestureRecognizer * tap2 = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(enterClub:)];
+    [self.club addGestureRecognizer:tap2];
+    self.club.backgroundColor = [UIColor redColor];
+    [self addSubview:self.club];
+    
+    
+    self.activity = [[UIImageView alloc] initWithFrame:CGRectMake(self.bounds.size.width * 2 / 3, 0, self.bounds.size.width / 3, self.bounds.size.height)];
+    UITapGestureRecognizer * tap3 = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(enterActivity:)];
+    [self.activity addGestureRecognizer:tap3];
+    [self addSubview:self.activity];
+    
+    
+}
+- (void)enterVenda:(UITapGestureRecognizer *)tap {
+//    NSString * url = self.target_idArr[0];
+    
+    
+}
+- (void)enterClub:(UITapGestureRecognizer *)tap {
+    NSString * url = self.target_idArr[1];
+    TransformToTaoBaoViewController * webVC = [[TransformToTaoBaoViewController alloc] init];
+    webVC.source_link = url;
+    [[Manager sharedManager].navigationController pushViewController:webVC animated:YES];
+    [webVC release];
+}
+- (void)enterActivity:(UITapGestureRecognizer *)tap {
+//    NSString * url = self.target_idArr[2];
+    
+    
+}
+- (UIView *)createViewWithFoundModel:(FoundModel *)model {
+    [self.venda sd_setImageWithURL:model.iconArr[0] placeholderImage:[UIImage imageNamed:@"1.jpg"]];
+    [self.club sd_setImageWithURL:model.iconArr[1] placeholderImage:[UIImage imageNamed:@"1.jpg"]];
+    [self.activity sd_setImageWithURL:model.iconArr[2] placeholderImage:[UIImage imageNamed:@"1.jpg"]];
+    
+    self.target_idArr = [NSMutableArray arrayWithArray:model.target_idArr];
+    
+    return self;
+}
+- (void)dealloc {
+//    self.venda = nil;
+//    self.activity = nil;
+//    self.club = nil;
+//    self.target_id = nil;
+    [super dealloc];
+}
+@end

@@ -1,0 +1,110 @@
+//
+//  BigPictureViewController.m
+//  Duitang
+//
+//  Created by lanouhn on 15/6/29.
+//  Copyright (c) 2015年 lanouhn. All rights reserved.
+//
+
+#import "BigPictureViewController.h"
+#import "UIImageView+WebCache.h"
+#import "Pictures.h"
+#import "Manager.h"
+#import "PictureViewController.h"
+
+@interface BigPictureViewController ()
+
+@end
+
+@implementation BigPictureViewController
+
+- (UIImageView *)imageView {
+    if (_imageView == nil) {
+        self.imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 80, self.view.bounds.size.width, self.view.bounds.size.height - 100)];
+        _imageView.backgroundColor = [UIColor grayColor];
+        [self.view addSubview:_imageView];
+    }
+    return _imageView;
+}
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+    
+    self.view.backgroundColor = [UIColor blackColor];
+    [self.imageView sd_setImageWithURL:[NSURL URLWithString:self.image]];
+    
+    self.imageView.userInteractionEnabled = YES;
+    
+    //为imageView添加轻拍手势
+    UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(returnPreviousPage:)];
+    [self.imageView addGestureRecognizer:tapGesture];
+    
+    //为imageView添加长按手势
+    UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc]initWithTarget:self action:@selector(longPressGesture:)];
+    [self.imageView addGestureRecognizer:longPress];
+       
+}
+-(BOOL)canBecomeFirstResponder
+{
+    return YES;
+}
+//点击图片执行的操作
+- (void)returnPreviousPage:(UITapGestureRecognizer *)tap {
+//    PictureViewController * pict = [[PictureViewController alloc] init];
+    
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+//长按图片执行的操作
+- (void)longPressGesture:(UILongPressGestureRecognizer *)longPress {
+    
+    UIMenuItem * itemPase = [[UIMenuItem alloc] initWithTitle:@"删除" action:@selector(delete)];
+    //设置下载的框框
+    UIMenuController * menuController = [UIMenuController sharedMenuController];
+    [menuController setMenuItems: @[itemPase]];
+    
+    CGPoint location = [longPress locationInView:[longPress view]];
+    CGRect menuLocation = CGRectMake(location.x, location.y, 0, 0);
+    [menuController setTargetRect:menuLocation inView:[longPress view]];
+    menuController.arrowDirection = UIMenuControllerArrowDown;
+    
+    [menuController setMenuVisible:YES animated:YES];
+}
+//下载执行的操作
+- (void)delete {
+    
+    //     UIImageWriteToSavedPhotosAlbum(self.imageView.image, nil, nil, nil);
+    [[Manager sharedManager] deletePictures:self.image];
+    
+    
+    
+    //    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"存储照片成功" message:@"您已将照片存储于图片库中，打开照片程序即可查看。" delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil];
+    //    [alert show];
+    //    [alert release];
+}
+
+
+//- (void)viewWillAppear:(BOOL)animated {
+//    
+//    
+//    self.hidesBottomBarWhenPushed = YES;
+//}
+//- (void)viewDidDisappear:(BOOL)animated {
+//    self.hidesBottomBarWhenPushed = NO;
+//
+//}
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end
